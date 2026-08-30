@@ -1,0 +1,755 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/v1/health": {
+      "get": {
+        "operationId": "HealthController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Confirma que el servicio está arriba",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/v1/events": {
+      "post": {
+        "operationId": "AnalyticsController_ingest",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestEventsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Ingesta de eventos de analítica, por lotes",
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/v1/catalog/categories": {
+      "get": {
+        "operationId": "CatalogController_categories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryNodeDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Árbol de categorías de 2 niveles",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/v1/catalog/products": {
+      "get": {
+        "operationId": "CatalogController_products",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "minPrice",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "maxPrice",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 24,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedProductsDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Listado de productos activos, con cursor y filtros",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/v1/catalog/search": {
+      "get": {
+        "operationId": "CatalogController_search",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 24,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SearchResultDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Búsqueda de texto completo, ordenada por relevancia (ts_rank)",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/v1/catalog/products/{id}/recommendations": {
+      "get": {
+        "operationId": "CatalogController_recommendations",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecommendedProductDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Productos relacionados (misma categoría, por popularidad)",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/v1/catalog/products/{slug}": {
+      "get": {
+        "operationId": "CatalogController_productBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Ficha de un producto con sus variantes y precio vigente",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/v1/cart": {
+      "get": {
+        "operationId": "CartController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "El carrito completo del visitante actual",
+        "tags": [
+          "cart"
+        ]
+      }
+    },
+    "/v1/cart/items": {
+      "post": {
+        "operationId": "CartController_add",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddCartItemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Agrega una línea. Nunca recibe precio: se recalcula server-side.",
+        "tags": [
+          "cart"
+        ]
+      }
+    },
+    "/v1/cart/items/{id}": {
+      "patch": {
+        "operationId": "CartController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCartItemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Reemplaza la cantidad de una línea",
+        "tags": [
+          "cart"
+        ]
+      },
+      "delete": {
+        "operationId": "CartController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Quita una línea del carrito",
+        "tags": [
+          "cart"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "amal-ecommerce-app API",
+    "description": "Contrato REST del backend hexagonal",
+    "version": "0.1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "HealthResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AnalyticsEventDto": {
+        "type": "object",
+        "properties": {
+          "eventType": {
+            "type": "string",
+            "pattern": "/^[a-z0-9_.]+$/"
+          },
+          "payload": {
+            "type": "object"
+          },
+          "occurredAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "IngestEventsDto": {
+        "type": "object",
+        "properties": {
+          "events": {
+            "minItems": 1,
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsEventDto"
+            }
+          }
+        },
+        "required": [
+          "events"
+        ]
+      },
+      "CategoryNodeDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "position": {
+            "type": "number"
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryNodeDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "position",
+          "children"
+        ]
+      },
+      "ProductSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "categoryId": {
+            "type": "string"
+          },
+          "isFeatured": {
+            "type": "boolean"
+          },
+          "fromPrice": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "categoryId",
+          "isFeatured",
+          "fromPrice"
+        ]
+      },
+      "PagedProductsDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductSummaryDto"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "SearchResultDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "fromPrice": {
+            "type": "string",
+            "nullable": true
+          },
+          "rank": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "fromPrice",
+          "rank"
+        ]
+      },
+      "RecommendedProductDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "categoryId": {
+            "type": "string"
+          },
+          "isFeatured": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "categoryId",
+          "isFeatured"
+        ]
+      },
+      "VariantPriceDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "string"
+          },
+          "offerAmount": {
+            "type": "string",
+            "nullable": true
+          },
+          "available": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "amount",
+          "offerAmount",
+          "available"
+        ]
+      },
+      "ProductVariantDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "attributes": {
+            "type": "object"
+          },
+          "stock": {
+            "type": "number"
+          },
+          "price": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VariantPriceDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "sku",
+          "attributes",
+          "stock",
+          "price"
+        ]
+      },
+      "ProductDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "categoryId": {
+            "type": "string"
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductVariantDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "description",
+          "categoryId",
+          "variants"
+        ]
+      },
+      "CartLineDto": {
+        "type": "object",
+        "properties": {
+          "cartItemId": {
+            "type": "string"
+          },
+          "variantId": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unitPrice": {
+            "type": "string",
+            "nullable": true
+          },
+          "lineTotal": {
+            "type": "string",
+            "nullable": true
+          },
+          "priceUnavailable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "cartItemId",
+          "variantId",
+          "quantity",
+          "unitPrice",
+          "lineTotal",
+          "priceUnavailable"
+        ]
+      },
+      "CartResponseDto": {
+        "type": "object",
+        "properties": {
+          "cartId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CartLineDto"
+            }
+          },
+          "subtotal": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "cartId",
+          "status",
+          "items",
+          "subtotal"
+        ]
+      },
+      "AddCartItemDto": {
+        "type": "object",
+        "properties": {
+          "variantId": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 99
+          }
+        },
+        "required": [
+          "variantId",
+          "quantity"
+        ]
+      },
+      "UpdateCartItemDto": {
+        "type": "object",
+        "properties": {
+          "quantity": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 99
+          }
+        },
+        "required": [
+          "quantity"
+        ]
+      }
+    }
+  }
+}

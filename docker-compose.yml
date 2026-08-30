@@ -1,0 +1,30 @@
+# Postgres liviano para desarrollo local — un solo contenedor, no el stack
+# completo de `supabase start` (Studio, Storage, Realtime, Kong, imgproxy…).
+# Alcanza para todo lo de B1: aplicar migraciones, correr verify.sql y
+# generar el esquema de Drizzle con `drizzle-kit pull`.
+#
+# El puerto 54322 se eligió a propósito para que coincida con el que usa
+# `supabase start` — así DATABASE_URL en .env no cambia el día que B2
+# necesite el stack completo de Supabase (para emitir JWT de verdad).
+#
+# Uso: docker compose up -d
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - '54322:5432'
+    volumes:
+      - amal_backend_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  amal_backend_pgdata:

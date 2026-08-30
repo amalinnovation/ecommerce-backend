@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+  # No se usa un Supabase real en CI (sólo Postgres) — valores de relleno
+  # para que ConfigModule valide al arrancar Nest en `openapi:generate`.
+  SUPABASE_URL: http://localhost:54321
+  SUPABASE_ANON_KEY: ci-anon-key
+  SUPABASE_SERVICE_ROLE_KEY: ci-service-role-key
+  COOKIE_SECRET: ci-cookie-secret-please-change-me-32chars
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Fronteras hexagonales (dependency-cruiser)
+        run: pnpm boundaries
+
+      - name: Compilar
+        run: pnpm build
+
+      - name: Pruebas unitarias
+        run: pnpm test
+
+      - name: Aplicar migraciones SQL
+        run: |
+          sudo apt-get update -y && sudo apt-get install -y postgresql-client
+          for f in supabase/migrations/*.sql; do
+            echo "Aplicando $f"
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f"
+          done
+
+      - name: verify.sql — invariantes del esquema
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/_local/verify.sql
+
+      - name: Pruebas E2E
+        run: pnpm test:e2e
+
+      - name: Generar OpenAPI y detectar deriva del contrato
+        run: |
+          pnpm openapi:generate
+          git diff --exit-code -- openapi.json || {
+            echo "::error::openapi.json cambió y no se regeneró/comprometió. Corre 'pnpm openapi:generate' y comitea el resultado.";
+            exit 1;
+          }
