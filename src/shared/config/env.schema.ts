@@ -5,6 +5,7 @@ import { z } from 'zod';
  * en vez de fallar a mitad de un request.
  */
 export const envSchema = z.object({
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(3000),
   DATABASE_URL: z.string().url(),
   SUPABASE_URL: z.string().url(),

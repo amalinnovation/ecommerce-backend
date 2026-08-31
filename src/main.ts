@@ -1,9 +1,11 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './shared/infrastructure/http/global-exception.filter';
+import { buildOpenApiDocument } from './shared/infrastructure/http/openapi-document';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -22,7 +24,12 @@ async function bootstrap() {
 
   app.useGlobalFilters(new GlobalExceptionFilter());
 
-  const port = process.env.PORT ?? 3000;
+  if (process.env.NODE_ENV !== 'production') {
+    const document = buildOpenApiDocument(app);
+    SwaggerModule.setup('docs', app, document);
+  }
+
+  const port = process.env.PORT ?? 5000;
   await app.listen(port);
 }
 

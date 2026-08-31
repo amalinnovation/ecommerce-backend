@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { buildOpenApiDocument } from './shared/infrastructure/http/openapi-document';
 
 /**
  * Genera openapi.json desde los DTO decorados. No levanta un servidor HTTP
@@ -17,14 +17,7 @@ import { AppModule } from './app.module';
 async function generate() {
   const app = await NestFactory.create(AppModule, { logger: false });
 
-  const config = new DocumentBuilder()
-    .setTitle('amal-ecommerce-app API')
-    .setDescription('Contrato REST del backend hexagonal')
-    .setVersion('0.1.0')
-    .addBearerAuth()
-    .build();
-
-  const document = SwaggerModule.createDocument(app, config);
+  const document = buildOpenApiDocument(app);
   process.stdout.write(JSON.stringify(document, null, 2));
 
   await app.close();
