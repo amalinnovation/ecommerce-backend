@@ -1,6 +1,7 @@
 allowBuilds:
   '@scarf/scarf': false
   '@swc/core': true
+  bcrypt: true
   cpu-features: false
   esbuild: true
   protobufjs: false
