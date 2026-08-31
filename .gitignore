@@ -8,6 +8,7 @@ coverage/
 supabase/.branches/
 supabase/.temp/
 .turbo/
+.claude/settings.local.json
 
 # openapi.json SE COMITEA: es el contrato versionado que consume el
 # frontend, y CI lo regenera para detectar deriva (ver sección 05).
